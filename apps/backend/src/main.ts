@@ -3,7 +3,6 @@ initializeSentry('backend', true);
 import compression from 'compression';
 
 import { loadSwagger } from '@gitroom/helpers/swagger/load.swagger';
-import { json } from 'express';
 import { Runtime } from '@temporalio/worker';
 Runtime.install({ shutdownSignals: [] });
 
@@ -12,6 +11,7 @@ process.env.TZ = 'UTC';
 import cookieParser from 'cookie-parser';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
 import { SubscriptionExceptionFilter } from '@gitroom/backend/services/auth/permissions/subscription.exception';
@@ -20,8 +20,9 @@ import { ConfigurationChecker } from '@gitroom/helpers/configuration/configurati
 import { startMcp } from '@gitroom/nestjs-libraries/chat/start.mcp';
 
 async function start() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
+    bodyParser: false,
     cors: {
       ...(!process.env.NOT_SECURED ? { credentials: true } : {}),
       allowedHeaders: [
@@ -47,6 +48,9 @@ async function start() {
     },
   });
 
+  app.useBodyParser('json', { limit: '50mb' });
+  app.useBodyParser('urlencoded', { extended: true, limit: '50mb' });
+
   await startMcp(app);
 
   app.useGlobalPipes(
@@ -54,10 +58,6 @@ async function start() {
       transform: true,
     })
   );
-
-  app.use(['/copilot/*', '/posts'], (req: any, res: any, next: any) => {
-    json({ limit: '50mb' })(req, res, next);
-  });
 
   app.use(cookieParser());
   app.use(compression());

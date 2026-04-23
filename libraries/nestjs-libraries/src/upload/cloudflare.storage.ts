@@ -7,7 +7,10 @@ import { getExtension } from 'mime';
 import { IUploadProvider } from './upload.interface';
 import axios from 'axios';
 import { isSafePublicHttpsUrl } from '@gitroom/nestjs-libraries/dtos/webhooks/webhook.url.validator';
-import { ssrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
+import {
+  publicHttpsAssetFetchHeaders,
+  ssrfSafeDispatcher,
+} from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { fromBuffer } = require('file-type');
 
@@ -81,9 +84,15 @@ class CloudflareStorage implements IUploadProvider {
       throw new Error('Unsafe URL');
     }
     const loadImage = await fetch(path, {
+      headers: { ...publicHttpsAssetFetchHeaders },
       // @ts-ignore — undici option, not in lib.dom fetch types
       dispatcher: ssrfSafeDispatcher,
     });
+    if (!loadImage.ok) {
+      throw new Error(
+        `Failed to fetch asset: ${loadImage.status} ${loadImage.statusText}`
+      );
+    }
     const body = Buffer.from(await loadImage.arrayBuffer());
     const detected = await fromBuffer(body);
     if (!detected || !ALLOWED_MIME_TYPES.has(detected.mime)) {

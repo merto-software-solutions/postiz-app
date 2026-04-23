@@ -4,7 +4,10 @@ import { mkdirSync, unlink, writeFileSync } from 'fs';
 import mime from 'mime';
 import { extname } from 'path';
 import { isSafePublicHttpsUrl } from '@gitroom/nestjs-libraries/dtos/webhooks/webhook.url.validator';
-import { ssrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
+import {
+  publicHttpsAssetFetchHeaders,
+  ssrfSafeDispatcher,
+} from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { fromBuffer } = require('file-type');
 
@@ -30,9 +33,15 @@ export class LocalStorage implements IUploadProvider {
       throw new Error('Unsafe URL');
     }
     const loadImage = await fetch(path, {
+      headers: { ...publicHttpsAssetFetchHeaders },
       // @ts-ignore — undici option, not in lib.dom fetch types
       dispatcher: ssrfSafeDispatcher,
     });
+    if (!loadImage.ok) {
+      throw new Error(
+        `Failed to fetch asset: ${loadImage.status} ${loadImage.statusText}`
+      );
+    }
     const contentType =
       loadImage?.headers?.get('content-type') ||
       loadImage?.headers?.get('Content-Type');

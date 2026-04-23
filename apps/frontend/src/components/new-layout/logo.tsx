@@ -30,3 +30,9 @@ export const Logo = () => {
     </svg>
   );
 };
+
+export const LogoMerto = () => {
+  return (
+    <img src="/merto/images/logo-merto.png" alt="Logo Merto" className="w-[100px] h-[100px]" />
+  );
+}

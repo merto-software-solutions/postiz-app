@@ -1,7 +1,7 @@
 'use client';
 
 import React, { ReactNode, useCallback } from 'react';
-import { Logo } from '@gitroom/frontend/components/new-layout/logo';
+import { Logo, LogoMerto } from '@gitroom/frontend/components/new-layout/logo';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 const ModeComponent = dynamic(
   () => import('@gitroom/frontend/components/layout/mode.component'),
@@ -109,7 +109,8 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                         )}
                       >
                         <div className="flex flex-col h-full gap-[32px] flex-1 py-[12px]">
-                          <Logo />
+                          {/* <Logo /> */}
+                          <LogoMerto />
                           <TopMenu />
                         </div>
                       </div>
